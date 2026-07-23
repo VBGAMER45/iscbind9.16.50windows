@@ -1,0 +1,17 @@
+Build/
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.log
+x64/
+Debug/
+Release/
+*.user
+*.suo
+.vs/
+mscver.*
+testossl.*
+testosslv.*
+testuv.*
+*.dll
