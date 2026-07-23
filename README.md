@@ -1,31 +1,32 @@
 Backported The following fixes to ISC BIND 9.16.50 to Windows from RHEL
 
 
-  ┌──────────────────────────────────────────────────────────────────────────────────┬───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-  │                                       Fix                                        │                                                        Source                                                         │
-  ├──────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ CVE-2024-1975 — SIG(0) CPU exhaustion                                            │ RHEL 9 dist-git, applied clean                                                                                        │
-  ├──────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ CVE-2024-1737 — huge-RRset slowdown (3 patches, adds max-records-per-type /      │ RHEL 9 dist-git, applied clean                                                                                        │
-  │ max-types-per-name options)                                                      │                                                                                                                       │
-  ├──────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ CVE-2024-4076 — serve-stale assertion crash                                      │ RHEL 9 dist-git, applied clean                                                                                        │
-  ├──────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ CVE-2024-11187 — additional-section CPU exhaustion (bonus: wasn't on your list,  │ RHEL 9 dist-git                                                                                                       │
-  │ but affects 9.16)                                                                │                                                                                                                       │
-  ├──────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ CVE-2025-40780 — weak PRNG → spoofing (now refills from the OpenSSL CSPRNG)      │ RHEL 9 dist-git                                                                                                       │
-  ├──────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ CVE-2025-40778 — unsolicited-RR cache poisoning, plus ISC's follow-up fix for    │ RHEL 9 dist-git                                                                                                       │
-  │ the stale-CNAME regression that hardening caused                                 │                                                                                                                       │
-  ├──────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ CVE-2026-1519 — NSEC3 iteration CPU exhaustion                                   │ RHEL 9 dist-git                                                                                                       │
-  ├──────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ CVE-2026-5946 — CLASS ≠ IN assertion crashes                                     │ RHEL 9 dist-git                                                                                                       │
-  ├──────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ CVE-2026-3592 — self-pointed glue amplification                                  │ Hand-ported from ISC's 9.18 commit 5abfbc266302 (not in RHEL yet): caps addresses per nameserver at 6 in adb.c and    │
-  │                                                                                  │ replaces the resolver's next-server selection with a dedup-aware lowest-RTT scan                                      │
-  └──────────────────────────────────────────────────────────────────────────────────┴───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+CVE-2024-1975 — SIG(0) CPU exhaustion
+Source: RHEL 9 dist-git, applied clean
+
+CVE-2024-1737 — huge-RRset slowdown (3 patches, adds max-records-per-type / max-types-per-name options)
+Source: RHEL 9 dist-git, applied clean
+
+CVE-2024-4076 — serve-stale assertion crash
+Source: RHEL 9 dist-git, applied clean
+
+CVE-2024-11187 — additional-section CPU exhaustion (bonus: wasn't on your list, but affects 9.16)
+Source: RHEL 9 dist-git
+
+CVE-2025-40780 — weak PRNG → spoofing (now refills from the OpenSSL CSPRNG)
+Source: RHEL 9 dist-git
+
+CVE-2025-40778 — unsolicited-RR cache poisoning, plus ISC's follow-up fix for the stale-CNAME regression that hardening caused
+Source: RHEL 9 dist-git
+
+CVE-2026-1519 — NSEC3 iteration CPU exhaustion
+Source: RHEL 9 dist-git
+
+CVE-2026-5946 — CLASS ≠ IN assertion crashes
+Source: RHEL 9 dist-git
+
+CVE-2026-3592 — self-pointed glue amplification
+Source: Hand-ported from ISC's 9.18 commit 5abfbc266302 (not in RHEL yet): caps addresses per nameserver at 6 in adb.c and replaces the resolver's next-server selection with a dedup-aware lowest-RTT scan
 
 
 
