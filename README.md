@@ -26,6 +26,19 @@ Backported The following fixes to ISC BIND 9.16.50 to Windows from RHEL
   │ CVE-2026-3592 — self-pointed glue amplification                                  │ Hand-ported from ISC's 9.18 commit 5abfbc266302 (not in RHEL yet): caps addresses per nameserver at 6 in adb.c and    │
   │                                                                                  │ replaces the resolver's next-server selection with a dedup-aware lowest-RTT scan                                      │
   └──────────────────────────────────────────────────────────────────────────────────┴───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+  ┌─────────┬────────────────┬────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Commit  │      CVE       │                                                  Fix                                                   │
+  ├─────────┼────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ bcf6174 │ CVE-2026-11331 │ RPZ wildcard-CNAME name-too-long now returns instead of processing the over-long name (lib/ns/query.c) │
+  ├─────────┼────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 1222935 │ CVE-2026-11622 │ Cache slab headers reference-counted to stop random-subdomain memory growth (rbtdb.c)                  │
+  ├─────────┼────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ ad8ea1e │ CVE-2026-13204 │ Two RUNTIME_CHECK assertions on unsigned NSEC/NSEC3 noqname proofs replaced with graceful error paths  │
+  ├─────────┼────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 3e0796e │ CVE-2026-13321 │ dns_dnssec_verify now rejects NSEC "next" names outside the signer's zone (dnssec.c)                   │
+  ├─────────┼────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 212329b │ —              │ CLAUDE.md updated: status, mapping, verification, ISC-range recheck                                    │
+  └─────────┴────────────────┴────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
 
 
