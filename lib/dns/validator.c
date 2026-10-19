@@ -950,6 +950,8 @@ validator_callback_nsec(isc_task_t *task, isc_event_t *event) {
 				if (NEEDNOQNAME(val)) {
 					proofs[DNS_VALIDATOR_NOQNAMEPROOF] =
 						devent->name;
+					val->event->noqnametype =
+						dns_rdatatype_nsec;
 				}
 			}
 		}
@@ -2317,6 +2319,7 @@ findnsec3proofs(dns_validator_t *val) {
 			    proofs[DNS_VALIDATOR_NOQNAMEPROOF] == NULL)
 			{
 				proofs[DNS_VALIDATOR_NOQNAMEPROOF] = name;
+				val->event->noqnametype = dns_rdatatype_nsec3;
 			} else if (setclosest) {
 				proofs[DNS_VALIDATOR_CLOSESTENCLOSER] = name;
 			} else if (NEEDNODATA(val) &&
@@ -2344,6 +2347,7 @@ findnsec3proofs(dns_validator_t *val) {
 		if (!exists && setnearest) {
 			val->attributes |= VALATTR_FOUNDNOQNAME;
 			proofs[DNS_VALIDATOR_NOQNAMEPROOF] = name;
+			val->event->noqnametype = dns_rdatatype_nsec3;
 			if (optout) {
 				val->attributes |= VALATTR_FOUNDOPTOUT;
 			}
@@ -3210,6 +3214,7 @@ dns_validator_create(dns_view_t *view, dns_name_t *name, dns_rdatatype_t type,
 	memset(event->proofs, 0, sizeof(event->proofs));
 	event->optout = false;
 	event->secure = false;
+	event->noqnametype = dns_rdatatype_none;
 
 	val = isc_mem_get(view->mctx, sizeof(*val));
 	*val = (dns_validator_t){ .event = event,

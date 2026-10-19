@@ -668,7 +668,8 @@ add_bad(fetchctx_t *fctx, dns_message_t *rmessage, dns_adbaddrinfo_t *addrinfo,
 	isc_result_t reason, badnstype_t badtype);
 static isc_result_t
 findnoqname(fetchctx_t *fctx, dns_message_t *message, dns_name_t *name,
-	    dns_rdatatype_t type, dns_name_t **noqname);
+	    dns_rdatatype_t type, dns_name_t **noqnamep,
+	    dns_rdatatype_t *noqnametypep);
 static void
 fctx_increference(fetchctx_t *fctx);
 static bool
@@ -5959,7 +5960,8 @@ validated(isc_task_t *task, isc_event_t *event) {
 	if (vevent->proofs[DNS_VALIDATOR_NOQNAMEPROOF] != NULL) {
 		result = dns_rdataset_addnoqname(
 			vevent->rdataset,
-			vevent->proofs[DNS_VALIDATOR_NOQNAMEPROOF]);
+			vevent->proofs[DNS_VALIDATOR_NOQNAMEPROOF],
+			vevent->noqnametype);
 		if (result != ISC_R_SUCCESS) {
 			goto noanswer_response;
 		}
@@ -5976,11 +5978,13 @@ validated(isc_task_t *task, isc_event_t *event) {
 	{
 		isc_result_t tresult;
 		dns_name_t *noqname = NULL;
+		dns_rdatatype_t noqnametype = dns_rdatatype_none;
 		tresult = findnoqname(fctx, message, vevent->name,
-				      vevent->rdataset->type, &noqname);
+				      vevent->rdataset->type, &noqname,
+				      &noqnametype);
 		if (tresult == ISC_R_SUCCESS && noqname != NULL) {
 			tresult = dns_rdataset_addnoqname(vevent->rdataset,
-							  noqname);
+							  noqname, noqnametype);
 			RUNTIME_CHECK(tresult == ISC_R_SUCCESS);
 		}
 	}
@@ -6195,7 +6199,8 @@ fctx_log(void *arg, int level, const char *fmt, ...) {
 
 static isc_result_t
 findnoqname(fetchctx_t *fctx, dns_message_t *message, dns_name_t *name,
-	    dns_rdatatype_t type, dns_name_t **noqnamep) {
+	    dns_rdatatype_t type, dns_name_t **noqnamep,
+	    dns_rdatatype_t *noqnametypep) {
 	dns_rdataset_t *nrdataset, *next, *sigrdataset;
 	dns_rdata_rrsig_t rrsig;
 	isc_result_t result;
@@ -6213,6 +6218,7 @@ findnoqname(fetchctx_t *fctx, dns_message_t *message, dns_name_t *name,
 	FCTXTRACE("findnoqname");
 
 	REQUIRE(noqnamep != NULL && *noqnamep == NULL);
+	REQUIRE(noqnametypep != NULL);
 
 	/*
 	 * Find the SIG for this rdataset, if we have it.
@@ -6323,6 +6329,7 @@ findnoqname(fetchctx_t *fctx, dns_message_t *message, dns_name_t *name,
 		}
 		if (sigrdataset != NULL) {
 			*noqnamep = noqname;
+			*noqnametypep = found;
 		}
 	}
 	return (result);
@@ -6564,14 +6571,18 @@ cache_name(fetchctx_t *fctx, dns_name_t *name, dns_message_t *message,
 				{
 					isc_result_t tresult;
 					dns_name_t *noqname = NULL;
+					dns_rdatatype_t noqnametype =
+						dns_rdatatype_none;
 					tresult = findnoqname(
 						fctx, message, name,
-						rdataset->type, &noqname);
+						rdataset->type, &noqname,
+						&noqnametype);
 					if (tresult == ISC_R_SUCCESS &&
 					    noqname != NULL)
 					{
 						(void)dns_rdataset_addnoqname(
-							rdataset, noqname);
+							rdataset, noqname,
+							noqnametype);
 					}
 				}
 				if ((fctx->options & DNS_FETCHOPT_PREFETCH) !=
@@ -6722,12 +6733,15 @@ cache_name(fetchctx_t *fctx, dns_name_t *name, dns_message_t *message,
 			{
 				isc_result_t tresult;
 				dns_name_t *noqname = NULL;
+				dns_rdatatype_t noqnametype =
+					dns_rdatatype_none;
 				tresult = findnoqname(fctx, message, name,
-						      rdataset->type, &noqname);
+						      rdataset->type, &noqname,
+						      &noqnametype);
 				if (tresult == ISC_R_SUCCESS && noqname != NULL)
 				{
-					(void)dns_rdataset_addnoqname(rdataset,
-								      noqname);
+					(void)dns_rdataset_addnoqname(
+						rdataset, noqname, noqnametype);
 				}
 			}
 

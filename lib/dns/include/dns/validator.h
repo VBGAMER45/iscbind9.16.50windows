@@ -102,6 +102,10 @@ typedef struct dns_validatorevent {
 	 * Answer is secure.
 	 */
 	bool secure;
+	/*
+	 * The denial type (NSEC or NSEC3) of the NOQNAME proof.
+	 */
+	dns_rdatatype_t noqnametype;
 } dns_validatorevent_t;
 
 #define DNS_VALIDATOR_NOQNAMEPROOF    0
