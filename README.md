@@ -39,6 +39,35 @@ Backported The following fixes to ISC BIND 9.16.50 to Windows from RHEL
   ├─────────┼────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────┤
   │ 212329b │ —              │ CLAUDE.md updated: status, mapping, verification, ISC-range recheck                                    │
   └─────────┴────────────────┴────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+  ┌─────────┬────────────────┬────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ d62872d │ CVE-2026-19666 │ DNS64 filter64 path no longer leaves a stale noqname alias behind (use-after-free / assertion crash)   │
+  │         │                │ (lib/ns/query.c)                                                                                       │
+  ├─────────┼────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 25f9d0c │ CVE-2026-19667 │ Negative-cache records too big for a dns_rdata_t (exactly 64 KiB) are rejected instead of crashing     │
+  │         │                │ every later reader (ncache.c)                                                                          │
+  ├─────────┼────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 3d983a3 │ CVE-2026-80274 │ NOQNAME proof add/get paths now agree on NSEC vs NSEC3, so mixed proofs no longer crash the resolver   │
+  │         │                │ (rdataset/validator/resolver)                                                                          │
+  ├─────────┼────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ ee43125 │ —              │ Built-in root trust anchor updated: KSK-2024 (key tag 38696) added to bind.keys / bind.keys.h          │
+  ├─────────┼────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ dfddd3c │ CVE-2026-19662 │ NOQNAME proof rdatasets hold a reference to their cache slab header, so they can't outlive it          │
+  │         │                │ (use-after-free) (rbtdb.c)                                                                             │
+  ├─────────┼────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ b727ae1 │ CVE-2026-94300 │ GSS-TSIG security context access serialized under the key mutex (gssapi_link.c; GSSAPI is compiled out │
+  │         │                │ of this build)                                                                                         │
+  ├─────────┼────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ b3fa69f │ CVE-2026-97313 │ RPZ: 'recursionok' is only re-set when the client asked for and is allowed recursion (assertion crash) │
+  │         │                │ (lib/ns/query.c)                                                                                       │
+  ├─────────┼────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ b83bb39 │ CVE-2026-96888 │ NXDOMAIN redirect handles strict qname-minimization failures without crashing; AD flag cleared on      │
+  │         │                │ redirect NXRRSET (query.c)                                                                             │
+  ├─────────┼────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ e52417e │ CVE-2026-19630 │ Compression pointers capped per name (128 hops, 2 in a row) and per message (4 per byte): no more      │
+  │         │                │ unbounded parse CPU (name.c, message.c)                                                                │
+  └─────────┴────────────────┴────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  Not applied, because they do not affect this build: CVE-2026-3039 (needs GSSAPI), CVE-2026-11721 (needs synth-from-dnssec yes), CVE-2025-40776 (Subscription Edition only), and CVE-2026-5950, CVE-2026-10723, CVE-2026-10822, CVE-2026-12617, CVE-2026-11605, CVE-2025-40777 (ISC lists only 9.18 or later as affected).
 
 
 

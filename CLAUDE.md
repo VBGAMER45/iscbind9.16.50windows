@@ -46,7 +46,7 @@ msbuild /m /t:Build /p:Configuration=Release /p:Platform=x64 bind9.sln
   (from `win32utils\`, inside the VS env). Note: `with-libxml2=no` is required —
   the "auto" detection *dies* if libxml2 source isn't found at sibling root.
 
-## Security patch status (as of 2026-10-19)
+## Security patch status (as of 2026-11-16)
 
 Applied (see git log): CVE-2024-1975, CVE-2024-1737 (3 patches; adds
 `max-records-per-type` / `max-types-per-name` options, defaults 100), CVE-2024-4076,
@@ -57,9 +57,45 @@ CVE-2026-13321 (applied 2026-08-16 from **Debian DLA-4725-1**, bind9
 `1:9.16.50-1~deb11u6` — Debian 11 "bullseye" ships exactly 9.16.50, so zero
 version drift; test-only hunks dropped), CVE-2026-19666, CVE-2026-19667, CVE-2026-80274 (applied
 2026-10-19 from **RHEL/CentOS Stream 9 c9s** `bind-9.16-CVE-2026-*.patch`; the `*-test.patch`
-companions are saved in `patches` but not applied - unit tests aren't built here).
+companions are saved in `patches` but not applied - unit tests aren't built here),
+CVE-2026-19662, CVE-2026-94300, CVE-2026-97313, CVE-2026-96888, CVE-2026-19630 (applied
+2026-11-16 from **RHEL c9s** `32:9.16.50-12` / `-13`; see below).
 Also 2026-10-19: built-in root trust anchor updated for **KSK-2024** (see below).
 Everything older is already upstream in 9.16.50.
+
+## ✓ 2026-11-16: ISC Sep/Oct 2026 batch applied (CVE-2026-19662 / -94300 / -97313 / -96888 / -19630)
+
+Source: RHEL/CentOS Stream 9 dist-git (`c9s`), all five `git apply`'d cleanly in RHEL's
+patch order (Patch251, 253–256) on top of the 2026-10-19 state; 19630's unit-test hunks
+(`lib/dns/tests/`) excluded, `bind-9.16-CVE-2026-19662-test.patch` saved but not applied.
+No `.def`/`.vcxproj` changes needed (no new exported symbols). One commit per CVE.
+
+| CVE | ISC rating | Issue | Exposure on our config | ISC commits |
+|---|---|---|---|---|
+| CVE-2026-19630 | **High 7.5** | unbounded compression-pointer following in `dns_name_fromwire()` → quadratic parse CPU from one crafted message | **every query packet** — the reason for this batch | 0405d33e |
+| CVE-2026-19662 | Medium 5.9 | NOQNAME proof views outlive their cache slabheader → use-after-free | recursion/cache only (localhost-only here); proofs are cached even with validation off | 7186f0b2 |
+| CVE-2026-97313 | High 7.5 | `recursionok` reset in `fetch_callback()` → RPZ assertion | only with `response-policy` (not configured) | cf16b3bc |
+| CVE-2026-96888 | High 7.5 | NXDOMAIN redirect after strict qname-min failure → NULL db assertion | only with redirect zone + `qname-minimization strict` (neither configured; default `relaxed`) | ede8392b, 7afc34cf |
+| CVE-2026-94300 | High 8.1 | concurrent use of shared GSS-TSIG context → memory corruption | **none** — `gssapi_link.c` is `#ifdef GSSAPI`, not defined here; applied for tree alignment only | 4a49103b |
+
+19630 adds a `budget` field to the public `dns_decompress_t`, so everything linking libdns
+must be rebuilt together (the normal full-solution build does). All seven users of a
+stack `dns_decompress_t` call `dns_decompress_init()`, which sets it.
+
+Verified 2026-11-16: rebuild clean (only BINDInstall/MFC), `named -V` = 9.16.50; both smoke
+tests pass (non-validating isc.org A; validating from an empty dir: 20326 + 38696 trusted,
+isc.org A/SRV and NSEC/NSEC3 NXDOMAINs under isc.org/nic.cz all `ad`, also from cache;
+google.com without `ad`; no assertions). Plus a 19630 probe over TCP: a query whose
+additional-section owner names follow a 200-deep pointer→pointer chain, and one with 200
+names each walking a 127-hop labelled chain (per-message budget), both now get **FORMERR**
+in <1 ms, while the conforming controls (2 consecutive indirects; 10 names × 127 hops) still
+get NOERROR, and named keeps answering afterwards.
+
+**Monitoring gap found:** ISC posted CVE-2026-19662 on **2026-09-16**, but the RHEL fix only
+reached public c9s on **2026-11-02** (the spec changelog says Oct 16 — that is the authoring
+date, not the push date). The 2026-10-19 cycle therefore had nothing to apply, but should
+have listed 19662 as outstanding. The weekly routine only watches RHEL/Debian, so it cannot
+see an ISC advisory until a downstream patch exists — it now also checks ISC's KB.
 
 ## ✓ 2026-10-19: ISC Aug 2026 batch applied (CVE-2026-19666 / -19667 / -80274) + root KSK-2024 anchor
 
@@ -138,8 +174,11 @@ EOL suite, not a real 9.16 exposure.
 
 A scheduled cloud routine "BIND 9.16 security patch monitor" (id
 `trig_01TSjuSztvaC3aoa7NvoFX7i`, https://claude.ai/code/routines/trig_01TSjuSztvaC3aoa7NvoFX7i)
-runs **weekly, Mondays 14:00 UTC / 09:00 America/Chicago**. It checks both trackers
-below for new 9.16-applicable patches and, when it finds something actionable,
+runs **weekly, Mondays 14:00 UTC** (08:00 CST / 09:00 CDT). It checks ISC's advisory list
+(https://kb.isc.org/docs/aa-00913 — added 2026-11-16, so a 9.16-affecting CVE is reported as
+"outstanding, awaiting 9.16 patch" before any distro has one) plus both trackers below for
+new 9.16-applicable patches, dating RHEL patches by c9s commit date rather than the spec
+changelog. When it finds something actionable, it
 drafts (does not send — Gmail connector can only draft) a summary email to
 jonathan@sourceitmarketing.com. Every run's full report is in the routine's
 dashboard log regardless. It carries the same applied/outstanding/N-A baseline as
@@ -149,7 +188,8 @@ or the dashboard) so it doesn't re-flag them.
 Intentionally NOT applied — re-evaluate if circumstances change:
 - **CVE-2026-3039** (GSS-API TKEY leak): this build compiles **without GSSAPI**
   (`named -V` shows "TKEY mode 3 support (GSS-API): no"). If anyone ever rebuilds
-  `with-gssapi`, apply `patches\bind-9.16-CVE-2026-3039.patch` first.
+  `with-gssapi`, apply `patches\bind-9.16-CVE-2026-3039.patch` first. (CVE-2026-94300,
+  also GSSAPI-only, *was* applied 2026-11-16 — it compiles to nothing here.)
 - **CVE-2026-11721**: requires `synth-from-dnssec yes;` — 9.16 default is `no`
   (bin/named/config.c). **Never enable synth-from-dnssec** on this build.
 - CVE-2025-40776 (ECS): paid Subscription Edition only. N/A.
@@ -167,7 +207,9 @@ Intentionally NOT applied — re-evaluate if circumstances change:
 2. **Get a 9.16-adapted patch — don't port from scratch.** Two downstream sources
    still maintain a 9.16.x branch; check both (a routine does this weekly — see
    "Automated monitoring" above):
-   - **RHEL 9 / CentOS Stream 9** (bind 9.16.23 + patches):
+   - **RHEL 9 / CentOS Stream 9** (rebased to **bind 9.16.50** by mid-2026, epoch 32 —
+     zero version drift, same as Debian bullseye). The spec `%changelog` date is when a
+     fix was written; check the c9s commit date for when it actually became public:
      - List: `https://gitlab.com/api/v4/projects/redhat%2Fcentos-stream%2Frpms%2Fbind/repository/tree?ref=c9s&per_page=100`
      - Raw file: `https://gitlab.com/redhat/centos-stream/rpms/bind/-/raw/c9s/<name>.patch`
      - `bind.spec` documents apply order (patch numbers) and upstream commit URLs.
